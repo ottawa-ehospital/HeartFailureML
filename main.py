@@ -19,10 +19,9 @@ app.add_middleware(
 model_path = "./trainedModel.h5"
 binary_model = load_model(model_path)
 
-
 class Item(BaseModel):
     age: int
-    sex: int
+    gender: str  # Change 'sex' to 'gender' and update its type to str
     cp: int
     trestbps: int
     chol: int
@@ -41,16 +40,19 @@ async def ping():
 
 @app.post("/predict")
 def predict(item: Item):
+    # Map categorical variables to numerical values
+    gender_mapping = {'Female': 0,'Male': 1}
+
     # Convert input data to a NumPy array
     input_data = np.array([[
-        item.age, item.sex, item.cp, item.trestbps, item.chol, item.fbs, item.restecg,
+        item.age, gender_mapping.get(item.gender, 2), item.cp, item.trestbps, item.chol, item.fbs, item.restecg,
         item.thalach, item.exang, item.oldpeak, item.slope, item.ca, item.thal
     ]])
 
     # Make prediction using the loaded model
     prediction = binary_model.predict(input_data)
 
-   # The output is a probability, you can convert it to a class (0 or 1) based on a threshold
+    # The output is a probability, you can convert it to a class (0 or 1) based on a threshold
     threshold = 0.5
     prediction_message = "Positive" if prediction[0, 0] > threshold else "Negative"
 
